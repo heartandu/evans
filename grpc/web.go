@@ -18,10 +18,27 @@ type webClient struct {
 	grpcreflection.Client
 }
 
-func NewWebClient(addr string, useReflection, useTLS bool, cacert, cert, certKey string, headers Headers) Client {
-	conn, err := grpcweb.DialContext(addr)
+func NewWebClient(
+	addr string,
+	useReflection, useTLS bool,
+	cacert, cert, certKey string,
+	headers Headers,
+) (Client, error) {
+	opts := make([]grpcweb.DialOption, 0)
+	if !useTLS {
+		opts = append(opts, grpcweb.WithInsecure())
+	} else {
+		tlsCfg, err := tlsConfig(cacert, cert, certKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get tls config: %w")
+		}
+
+		opts = append(opts, grpcweb.WithTLSConfig(tlsCfg))
+	}
+
+	conn, err := grpcweb.DialContext(addr, opts...)
 	if err != nil {
-		panic(err)
+		return nil, errors.Wrap(err, "failed to dial to gRPC server")
 	}
 	client := &webClient{
 		conn:    conn,
@@ -32,10 +49,14 @@ func NewWebClient(addr string, useReflection, useTLS bool, cacert, cert, certKey
 		client.Client = grpcreflection.NewWebClient(conn, headers)
 	}
 
-	return client
+	return client, nil
 }
 
-func (c *webClient) Invoke(ctx context.Context, fqrn string, req, res interface{}) (header, trailer metadata.MD, _ error) {
+func (c *webClient) Invoke(
+	ctx context.Context,
+	fqrn string,
+	req, res interface{},
+) (header, trailer metadata.MD, _ error) {
 	endpoint, err := fqrnToEndpoint(fqrn)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "grpc-web: failed to convert FQRN to endpoint")
@@ -76,7 +97,11 @@ func (s *webClientStream) CloseAndReceive(res interface{}) error {
 	return nil
 }
 
-func (c *webClient) NewClientStream(ctx context.Context, streamDesc *gogrpc.StreamDesc, fqrn string) (ClientStream, error) {
+func (c *webClient) NewClientStream(
+	ctx context.Context,
+	streamDesc *gogrpc.StreamDesc,
+	fqrn string,
+) (ClientStream, error) {
 	endpoint, err := fqrnToEndpoint(fqrn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to convert FQRN to endpoint")
@@ -124,7 +149,11 @@ func (s *webServerStream) Receive(res interface{}) error {
 	return nil
 }
 
-func (c *webClient) NewServerStream(ctx context.Context, streamDesc *gogrpc.StreamDesc, fqrn string) (ServerStream, error) {
+func (c *webClient) NewServerStream(
+	ctx context.Context,
+	streamDesc *gogrpc.StreamDesc,
+	fqrn string,
+) (ServerStream, error) {
 	endpoint, err := fqrnToEndpoint(fqrn)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to convert FQRN to endpoint")

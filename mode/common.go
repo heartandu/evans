@@ -15,8 +15,20 @@ import (
 func newGRPCClient(cfg *config.Config) (grpc.Client, error) {
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	if cfg.Request.Web {
-		//TODO: remove second arg
-		return grpc.NewWebClient(addr, cfg.Server.Reflection, false, "", "", "", grpc.Headers(cfg.Request.Header)), nil
+		client, err := grpc.NewWebClient(
+			addr,
+			cfg.Server.Reflection,
+			cfg.Server.TLS,
+			cfg.Request.CACertFile,
+			cfg.Request.CertFile,
+			cfg.Request.CertKeyFile,
+			grpc.Headers(cfg.Request.Header),
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to instantiate a gRPC-Web client")
+		}
+
+		return client, nil
 	}
 	client, err := grpc.NewClient(
 		addr,
@@ -102,7 +114,10 @@ func setDefault(cfg *config.Config) error {
 	return nil
 }
 
-func newDescSource(cfg *config.Config, grpcClient grpcreflection.Client) (descSource proto.DescriptorSource, err error) {
+func newDescSource(
+	cfg *config.Config,
+	grpcClient grpcreflection.Client,
+) (descSource proto.DescriptorSource, err error) {
 	if cfg.Server.Reflection {
 		descSource = proto.NewDescriptorSourceFromReflection(grpcClient)
 	} else {

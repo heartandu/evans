@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"errors"
 	"path/filepath"
 	"testing"
 )
@@ -53,7 +54,7 @@ func TestNewClient(t *testing.T) {
 				if err == nil {
 					t.Fatalf("NewClient must return an error, but got nil")
 				}
-				if c.err != err {
+				if !errors.Is(err, c.err) {
 					t.Errorf("expected: '%s', but got '%s'", c.err, err)
 				}
 

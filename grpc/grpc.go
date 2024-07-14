@@ -5,12 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 	"time"
-
-	"crypto/tls"
-	"crypto/x509"
 
 	"github.com/hashicorp/go-multierror"
 	"github.com/ktr0731/evans/grpc/grpcreflection"
@@ -22,8 +18,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 )
-
-var ErrMutualAuthParamsAreNotEnough = errors.New("cert and certkey are required to authenticate mutually")
 
 // RPC represents a RPC which belongs to a gRPC service.
 type RPC struct {
@@ -115,35 +109,22 @@ type client struct {
 // The set of cert and certKey enables mutual authentication if useTLS is enabled.
 // If one of it is not found, NewClient returns ErrMutualAuthParamsAreNotEnough.
 // If useTLS is false, cacert, cert and certKey are ignored.
-func NewClient(addr, serverName string, useReflection, useTLS bool, cacert, cert, certKey string, headers map[string][]string) (Client, error) {
+func NewClient(
+	addr, serverName string,
+	useReflection, useTLS bool,
+	cacert, cert, certKey string,
+	headers map[string][]string,
+) (Client, error) {
 	var opts []grpc.DialOption
 	if !useTLS {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else { // Enable TLS authentication
-		var tlsCfg tls.Config
-		if cacert != "" {
-			b, err := os.ReadFile(cacert)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to read the CA certificate")
-			}
-			cp := x509.NewCertPool()
-			if !cp.AppendCertsFromPEM(b) {
-				return nil, errors.New("failed to append the client certificate")
-			}
-			tlsCfg.RootCAs = cp
-		}
-		if cert != "" && certKey != "" {
-			// Enable mutual authentication
-			certificate, err := tls.LoadX509KeyPair(cert, certKey)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to read the client certificate")
-			}
-			tlsCfg.Certificates = append(tlsCfg.Certificates, certificate)
-		} else if cert != "" || certKey != "" {
-			return nil, ErrMutualAuthParamsAreNotEnough
+		tlsCfg, err := tlsConfig(cacert, cert, certKey)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get tls config")
 		}
 
-		creds := credentials.NewTLS(&tlsCfg)
+		creds := credentials.NewTLS(tlsCfg)
 		opts = append(opts, grpc.WithTransportCredentials(creds))
 
 		if serverName != "" {
