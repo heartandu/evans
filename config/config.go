@@ -95,8 +95,6 @@ func (c *Config) Validate() error {
 		{"certFile config or --cert flag required", c.Request.CertFile == "" && c.Request.CertKeyFile != ""},
 		{"certKeyFile config or --certkey flag required", c.Request.CertFile != "" && c.Request.CertKeyFile == ""},
 		{"one or more proto files, or gRPC reflection required", len(c.Default.ProtoFile) == 0 && !c.Server.Reflection},
-		// TODO: support it.
-		{"currently, gRPC-Web with TLS communication is not supported", c.Request.Web && c.Server.TLS},
 	}
 	for _, c := range invalidCases {
 		if c.cond {
