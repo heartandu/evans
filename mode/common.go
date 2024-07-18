@@ -16,7 +16,7 @@ func newGRPCClient(cfg *config.Config) (grpc.Client, error) {
 	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 	if cfg.Request.Web {
 		client, err := grpc.NewWebClient(
-			addr,
+			addr+cfg.Request.Prefix,
 			cfg.Server.Reflection,
 			cfg.Server.TLS,
 			cfg.Request.CACertFile,

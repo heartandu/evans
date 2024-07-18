@@ -38,6 +38,7 @@ type Header map[string][]string
 type Request struct {
 	Header      Header `toml:"header"`
 	Web         bool   `toml:"web"`
+	Prefix      string `toml:"prefix"`
 	CACertFile  string `toml:"caCertFile"`
 	CertFile    string `toml:"certFile"`
 	CertKeyFile string `toml:"certKeyFile"`
@@ -165,6 +166,7 @@ func newDefaultViper() *viper.Viper {
 	v.SetDefault("request.certFile", "")
 	v.SetDefault("request.certKeyFile", "")
 	v.SetDefault("request.web", false)
+	v.SetDefault("request.prefix", "")
 
 	return v
 }
@@ -184,6 +186,7 @@ func bindFlags(vp *viper.Viper, fs *pflag.FlagSet) {
 		"server.name":         "servername",
 		"request.header":      "header",
 		"request.web":         "web",
+		"request.prefix":      "prefix",
 		"request.cacertFile":  "cacert",
 		"request.certFile":    "cert",
 		"request.certKeyFile": "certkey",

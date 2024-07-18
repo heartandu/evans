@@ -158,6 +158,7 @@ func bindFlags(f *pflag.FlagSet, flags *flags, w io.Writer) {
 		newStringToStringValue(nil, &flags.common.header),
 		"header", "default headers that set to each requests (example: foo=bar)")
 	f.BoolVar(&flags.common.web, "web", false, "use gRPC-Web protocol")
+	f.StringVar(&flags.common.prefix, "prefix", "", "gRPC-Web endpoint prefix")
 	f.BoolVarP(&flags.common.reflection, "reflection", "r", false, "use gRPC reflection")
 	f.BoolVarP(&flags.common.tls, "tls", "t", false, "use a secure TLS connection")
 	f.StringVar(&flags.common.cacert, "cacert", "", "the CA certificate file for verifying the server")
