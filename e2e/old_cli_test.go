@@ -367,6 +367,7 @@ Options:
         --port, -p string                gRPC server port (default "50051")
         --header slice of strings        default headers that set to each requests (example: foo=bar) (default "[]")
         --web                            use gRPC-Web protocol (default "false")
+        --prefix string                  gRPC-Web endpoint prefix
         --reflection, -r                 use gRPC reflection (default "false")
         --tls, -t                        use a secure TLS connection (default "false")
         --cacert string                  the CA certificate file for verifying the server

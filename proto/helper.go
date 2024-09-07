@@ -6,10 +6,13 @@ import "strings"
 func FullyQualifiedServiceName(pkg, svc string) string {
 	var s []string
 	if pkg != "" {
-		s = []string{pkg, svc}
-	} else {
-		s = []string{svc}
+		s = append(s, pkg)
 	}
+
+	if svc != "" {
+		s = append(s, svc)
+	}
+
 	return strings.Join(s, ".")
 }
 
@@ -17,10 +20,13 @@ func FullyQualifiedServiceName(pkg, svc string) string {
 func FullyQualifiedMessageName(pkg, msg string) string {
 	var s []string
 	if pkg != "" {
-		s = []string{pkg, msg}
-	} else {
-		s = []string{msg}
+		s = append(s, pkg)
 	}
+
+	if msg != "" {
+		s = append(s, msg)
+	}
+
 	return strings.Join(s, ".")
 }
 
